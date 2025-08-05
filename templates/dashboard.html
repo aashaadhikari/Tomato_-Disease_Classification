@@ -1,0 +1,297 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - TomatoHealth{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Hero Section -->
+    <div class="dashboard-hero bg-success text-white">
+        <div class="container py-5">
+            <div class="row align-items-center">
+                <div class="col-lg-8">
+                    <h1 class="display-6 fw-bold mb-3">
+                        <i class="fas fa-seedling me-3"></i>
+                        Welcome back, {{ current_user.username }}!
+                    </h1>
+                    <p class="lead mb-4">
+                        Ready to protect your tomato plants? Upload an image to get instant AI-powered disease detection.
+                    </p>
+                    <a href="{{ url_for('predict') }}" class="btn btn-light btn-lg">
+                        <i class="fas fa-camera me-2"></i>
+                        Start Diagnosis
+                    </a>
+                </div>
+                <div class="col-lg-4 text-center">
+                    <i class="fas fa-microscope fa-5x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container py-5">
+        <!-- Statistics Cards -->
+        <div class="row mb-5">
+            <div class="col-md-4 mb-4">
+                <div class="card stats-card h-100 shadow-sm">
+                    <div class="card-body text-center">
+                        <div class="stats-icon bg-primary text-white mb-3">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <h3 class="card-title h2 text-primary mb-2">{{ total_predictions }}</h3>
+                        <p class="card-text text-muted">Total Diagnoses</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4 mb-4">
+                <div class="card stats-card h-100 shadow-sm">
+                    <div class="card-body text-center">
+                        <div class="stats-icon bg-success text-white mb-3">
+                            <i class="fas fa-leaf"></i>
+                        </div>
+                        <h3 class="card-title h2 text-success mb-2">
+                            {{ (recent_predictions | selectattr('prediction', 'equalto', 'Healthy') | list | length) }}
+                        </h3>
+                        <p class="card-text text-muted">Healthy Plants</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4 mb-4">
+                <div class="card stats-card h-100 shadow-sm">
+                    <div class="card-body text-center">
+                        <div class="stats-icon bg-warning text-white mb-3">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <h3 class="card-title h2 text-warning mb-2">
+                            {{ (recent_predictions | rejectattr('prediction', 'equalto', 'Healthy') | list | length) }}
+                        </h3>
+                        <p class="card-text text-muted">Issues Detected</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="row mb-5">
+            <div class="col-12">
+                <h2 class="section-title mb-4">
+                    <i class="fas fa-bolt me-2"></i>Quick Actions
+                </h2>
+            </div>
+            
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card action-card h-100 shadow-sm">
+                    <div class="card-body text-center">
+                        <div class="action-icon bg-success text-white mb-3">
+                            <i class="fas fa-camera"></i>
+                        </div>
+                        <h5 class="card-title">New Diagnosis</h5>
+                        <p class="card-text text-muted">Upload a tomato leaf image for AI analysis</p>
+                        <a href="{{ url_for('predict') }}" class="btn btn-success">
+                            <i class="fas fa-upload me-2"></i>Upload Image
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card action-card h-100 shadow-sm">
+                    <div class="card-body text-center">
+                        <div class="action-icon bg-info text-white mb-3">
+                            <i class="fas fa-history"></i>
+                        </div>
+                        <h5 class="card-title">View History</h5>
+                        <p class="card-text text-muted">Review all your past diagnoses and results</p>
+                        <a href="{{ url_for('history') }}" class="btn btn-info">
+                            <i class="fas fa-list me-2"></i>View All
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card action-card h-100 shadow-sm">
+                    <div class="card-body text-center">
+                        <div class="action-icon bg-primary text-white mb-3">
+                            <i class="fas fa-info-circle"></i>
+                        </div>
+                        <h5 class="card-title">Learn More</h5>
+                        <p class="card-text text-muted">Discover what diseases our AI can detect</p>
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#diseaseModal">
+                            <i class="fas fa-book me-2"></i>View Diseases
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        {% if recent_predictions %}
+        <div class="row">
+            <div class="col-12">
+                <h2 class="section-title mb-4">
+                    <i class="fas fa-clock me-2"></i>Recent Activity
+                </h2>
+                
+                <div class="card shadow-sm">
+                    <div class="card-header bg-light">
+                        <h5 class="card-title mb-0">Latest Diagnoses</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th scope="col">Date</th>
+                                        <th scope="col">Diagnosis</th>
+                                        <th scope="col">Confidence</th>
+                                        <th scope="col">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for prediction in recent_predictions %}
+                                    <tr>
+                                        <td>
+                                            <small class="text-muted">
+                                                {{ prediction.timestamp.strftime('%b %d, %Y at %I:%M %p') }}
+                                            </small>
+                                        </td>
+                                        <td>
+                                            <strong>{{ prediction.prediction }}</strong>
+                                        </td>
+                                        <td>
+                                            <div class="progress" style="height: 20px;">
+                                                <div class="progress-bar 
+                                                    {% if prediction.confidence >= 80 %}bg-success
+                                                    {% elif prediction.confidence >= 60 %}bg-warning
+                                                    {% else %}bg-danger{% endif %}" 
+                                                    role="progressbar" 
+                                                    style="width: {{ prediction.confidence }}%">
+                                                    {{ "%.1f"|format(prediction.confidence) }}%
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            {% if prediction.prediction == 'Healthy' %}
+                                                <span class="badge bg-success">
+                                                    <i class="fas fa-check me-1"></i>Healthy
+                                                </span>
+                                            {% else %}
+                                                <span class="badge bg-warning">
+                                                    <i class="fas fa-exclamation-triangle me-1"></i>Attention Needed
+                                                </span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="card-footer text-center">
+                        <a href="{{ url_for('history') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-eye me-2"></i>View All History
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="row">
+            <div class="col-12">
+                <div class="card shadow-sm text-center py-5">
+                    <div class="card-body">
+                        <i class="fas fa-seedling fa-4x text-muted mb-4"></i>
+                        <h3 class="text-muted mb-3">No diagnoses yet</h3>
+                        <p class="text-muted mb-4">Start protecting your tomato plants by uploading your first image!</p>
+                        <a href="{{ url_for('predict') }}" class="btn btn-success btn-lg">
+                            <i class="fas fa-camera me-2"></i>Get Started
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Disease Information Modal -->
+<div class="modal fade" id="diseaseModal" tabindex="-1" aria-labelledby="diseaseModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="diseaseModalLabel">
+                    <i class="fas fa-microscope me-2"></i>Detectable Diseases
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted mb-4">Our AI system can detect the following tomato plant conditions:</p>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item d-flex align-items-center">
+                                <i class="fas fa-bug text-danger me-3"></i>
+                                <span>Bacterial Spot</span>
+                            </li>
+                            <li class="list-group-item d-flex align-items-center">
+                                <i class="fas fa-circle text-warning me-3"></i>
+                                <span>Early Blight</span>
+                            </li>
+                            <li class="list-group-item d-flex align-items-center">
+                                <i class="fas fa-circle text-dark me-3"></i>
+                                <span>Late Blight</span>
+                            </li>
+                            <li class="list-group-item d-flex align-items-center">
+                                <i class="fas fa-circle text-info me-3"></i>
+                                <span>Leaf Mold</span>
+                            </li>
+                            <li class="list-group-item d-flex align-items-center">
+                                <i class="fas fa-circle text-secondary me-3"></i>
+                                <span>Septoria Leaf Spot</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item d-flex align-items-center">
+                                <i class="fas fa-spider text-danger me-3"></i>
+                                <span>Spider Mites</span>
+                            </li>
+                            <li class="list-group-item d-flex align-items-center">
+                                <i class="fas fa-bullseye text-warning me-3"></i>
+                                <span>Target Spot</span>
+                            </li>
+                            <li class="list-group-item d-flex align-items-center">
+                                <i class="fas fa-virus text-danger me-3"></i>
+                                <span>Yellow Leaf Curl Virus</span>
+                            </li>
+                            <li class="list-group-item d-flex align-items-center">
+                                <i class="fas fa-virus text-warning me-3"></i>
+                                <span>Mosaic Virus</span>
+                            </li>
+                            <li class="list-group-item d-flex align-items-center">
+                                <i class="fas fa-check-circle text-success me-3"></i>
+                                <span>Healthy Plant</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="alert alert-info mt-4">
+                    <i class="fas fa-lightbulb me-2"></i>
+                    <strong>Tip:</strong> For best results, upload clear, well-lit photos of tomato leaves showing any symptoms.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <a href="{{ url_for('predict') }}" class="btn btn-success">
+                    <i class="fas fa-camera me-2"></i>Start Diagnosis
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
