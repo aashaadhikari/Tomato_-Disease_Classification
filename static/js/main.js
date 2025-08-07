@@ -114,6 +114,71 @@ function showToast(message, type = 'info') {
 }
 
 /**
+ * Show error modal for non-plant images
+ */
+function showNonPlantError() {
+    const modalHTML = `
+        <div class="modal fade" id="nonPlantModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header bg-warning text-dark">
+                        <h5 class="modal-title">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Invalid Image Type
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="text-center mb-4">
+                            <i class="fas fa-times-circle fa-4x text-warning mb-3"></i>
+                            <h5>This doesn't appear to be a plant image</h5>
+                            <p class="text-muted">Our system detected that the uploaded image doesn't contain plant material suitable for disease analysis.</p>
+                        </div>
+                        
+                        <div class="alert alert-info">
+                            <h6><i class="fas fa-info-circle me-2"></i>What to upload instead:</h6>
+                            <ul class="mb-0">
+                                <li>Clear photos of tomato leaves</li>
+                                <li>Close-up shots of leaf damage or spots</li>
+                                <li>Images showing disease symptoms on plants</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="alert alert-warning">
+                            <h6><i class="fas fa-exclamation-triangle me-2"></i>Please avoid:</h6>
+                            <ul class="mb-0">
+                                <li>Mobile phones or electronics</li>
+                                <li>Furniture or household items</li>
+                                <li>Any non-plant objects</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-success" onclick="resetUpload(); $('#nonPlantModal').modal('hide');">
+                            <i class="fas fa-upload me-2"></i>Upload Different Image
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Remove existing modal if any
+    const existingModal = document.getElementById('nonPlantModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    // Add modal to body
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('nonPlantModal'));
+    modal.show();
+}
+
+/**
  * Animate elements on scroll
  */
 function animateOnScroll() {

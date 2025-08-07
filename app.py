@@ -11,6 +11,7 @@ import numpy as np
 from PIL import Image
 import io
 import base64
+import cv2
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -85,6 +86,73 @@ class Prediction(db.Model):
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
+
+def is_plant_image(image_path):
+    """
+    Basic plant detection using color analysis and edge detection.
+    This is a simple heuristic - for production, you'd want a dedicated plant detection model.
+    """
+    try:
+        # Read image
+        image = cv2.imread(image_path)
+        if image is None:
+            return False
+        
+        # Convert to different color spaces
+        hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+        lab = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
+        
+        # Define green color range (plants are typically green)
+        lower_green = np.array([35, 40, 40])
+        upper_green = np.array([85, 255, 255])
+        
+        # Create mask for green regions
+        green_mask = cv2.inRange(hsv, lower_green, upper_green)
+        
+        # Calculate percentage of green pixels
+        total_pixels = image.shape[0] * image.shape[1]
+        green_pixels = cv2.countNonZero(green_mask)
+        green_percentage = (green_pixels / total_pixels) * 100
+        
+        # Edge detection to find leaf-like structures
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        edges = cv2.Canny(gray, 50, 150)
+        
+        # Calculate edge density
+        edge_pixels = cv2.countNonZero(edges)
+        edge_percentage = (edge_pixels / total_pixels) * 100
+        
+        # Simple heuristic: if there's significant green color and some edges, it might be a plant
+        is_likely_plant = green_percentage > 15 and edge_percentage > 2
+        
+        # Additional check: look for organic shapes (leaves typically have rounded edges)
+        # This is a simplified check - in reality you'd want more sophisticated shape analysis
+        
+        return is_likely_plant
+        
+    except Exception as e:
+        print(f"Error in plant detection: {e}")
+        return False
+
+def validate_image_content(image_path):
+    """
+    Validate that the image contains plant material suitable for disease analysis.
+    Returns (is_valid, message)
+    """
+    try:
+        # Check if image is a plant
+        if not is_plant_image(image_path):
+            return False, "The uploaded image doesn't appear to contain plant material. Please upload a clear photo of a tomato leaf or plant."
+        
+        # Additional checks can be added here
+        # - Check image quality (blur, lighting)
+        # - Check if the plant part is clearly visible
+        # - Check minimum size requirements
+        
+        return True, "Image validation passed."
+        
+    except Exception as e:
+        return False, f"Error validating image: {str(e)}"
 
 # Load TensorFlow Lite model
 class TomatoDiseasePredictor:
@@ -268,9 +336,30 @@ def predict():
                 flash('Error saving file', 'error')
                 return redirect(request.url)
             
-            # Make prediction
             file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            
+            # Validate image content before classification
+            is_valid, validation_message = validate_image_content(file_path)
+            if not is_valid:
+                # Delete the uploaded file since it's not valid
+                try:
+                    os.remove(file_path)
+                except:
+                    pass
+                flash(validation_message, 'error')
+                return redirect(request.url)
+            
+            # Make prediction
             predicted_class, confidence, all_predictions = predictor.predict(file_path)
+            
+            # Additional confidence threshold check
+            if confidence < 0.3:  # Less than 30% confidence
+                flash('The image quality is too low for reliable disease detection. Please upload a clearer image of a tomato leaf.', 'error')
+                try:
+                    os.remove(file_path)
+                except:
+                    pass
+                return redirect(request.url)
             
             disease_name = DISEASE_CLASSES[predicted_class]
             treatment = DISEASE_TREATMENTS[disease_name]

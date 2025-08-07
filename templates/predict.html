@@ -88,6 +88,10 @@
                                         <i class="fas fa-check text-success me-2"></i>
                                         Focus on the leaf surface
                                     </li>
+                                    <li class="mb-2">
+                                        <i class="fas fa-check text-success me-2"></i>
+                                        <strong>Only upload tomato plant images</strong>
+                                    </li>
                                 </ul>
                             </div>
                             <div class="col-md-6">
@@ -100,7 +104,56 @@
                                         <i class="fas fa-check text-success me-2"></i>
                                         Show symptoms clearly
                                     </li>
+                                    <li class="mb-2">
+                                        <i class="fas fa-times text-danger me-2"></i>
+                                        <strong>Don't upload non-plant objects</strong>
+                                    </li>
                                 </ul>
+                            </div>
+                        </div>
+                        
+                        <!-- Important Notice -->
+                        <div class="alert alert-warning mt-3">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Important:</strong> This system is designed specifically for tomato plant disease detection. 
+                            Please only upload images of tomato leaves or plants. Images of other objects (phones, furniture, etc.) 
+                            will be rejected by our validation system.
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Example Images -->
+                <div class="card mt-4 border-0">
+                    <div class="card-body">
+                        <h5 class="card-title text-success">
+                            <i class="fas fa-images me-2"></i>What to Upload
+                        </h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="text-center mb-3">
+                                    <div class="example-image good-example">
+                                        <i class="fas fa-leaf fa-3x text-success"></i>
+                                        <p class="mt-2"><strong>Good Examples:</strong></p>
+                                        <ul class="list-unstyled text-muted">
+                                            <li>• Tomato leaves with spots</li>
+                                            <li>• Close-up of leaf damage</li>
+                                            <li>• Healthy tomato leaves</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="text-center mb-3">
+                                    <div class="example-image bad-example">
+                                        <i class="fas fa-times-circle fa-3x text-danger"></i>
+                                        <p class="mt-2"><strong>Don't Upload:</strong></p>
+                                        <ul class="list-unstyled text-muted">
+                                            <li>• Mobile phones or electronics</li>
+                                            <li>• Furniture or household items</li>
+                                            <li>• Non-plant objects</li>
+                                        </ul>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -426,6 +479,22 @@ document.addEventListener('DOMContentLoaded', function() {
     padding: 20px;
     border-radius: 10px;
     background: linear-gradient(135deg, rgba(40, 167, 69, 0.1), rgba(32, 201, 151, 0.1));
+}
+
+.example-image {
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 15px;
+}
+
+.good-example {
+    background: linear-gradient(135deg, rgba(40, 167, 69, 0.1), rgba(32, 201, 151, 0.1));
+    border: 2px solid #28a745;
+}
+
+.bad-example {
+    background: linear-gradient(135deg, rgba(220, 53, 69, 0.1), rgba(255, 193, 7, 0.1));
+    border: 2px solid #dc3545;
 }
 
 @media (max-width: 768px) {
